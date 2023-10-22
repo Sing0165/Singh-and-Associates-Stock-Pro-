@@ -1,0 +1,755 @@
+> library(shiny)
+> library(ggplot2)
+> library(plotly)
+> 
+> # Sample inventory data with more items
+> inventory <- data.frame(
++     ItemName = c("Rice", "Beans", "Canned Soup", "Pasta", "Cereal", "Flour", "Sugar", "Canned Vegetables", "Peanut Butter", "Spaghetti Sauce"),
++     Quantity = c(100, 50, 75, 120, 80, 40, 60, 70, 30, 50)
++ )
+> 
+> # Define a function to generate random employees
+> generateRandomEmployees <- function() {
++     set.seed(123)
++     first_names <- sample(c("John", "Jane", "Steve", "Emily", "Michael", "Olivia", "David", "Sophia", "Daniel", "Ava"), 100, replace = TRUE)
++     last_names <- sample(c("Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Garcia", "Martinez", "Jackson", "Anderson"), 100, replace = TRUE)
++     majors <- sample(c("Engineering", "Biology", "Business", "Psychology", "Computer Science", "History", "Mathematics", "Nursing", "English", "Sociology"), 100, replace = TRUE)
++     shift <- sample(c("7 am - 12 pm", "12 pm - 5 pm", "7 am - 3 pm", "8 am - 4 pm"), 100, replace = TRUE)
++     employees <- data.frame(FirstName = first_names, LastName = last_names, Major = majors, Shift = shift)
++     employees <- unique(employees)  # Remove duplicates
++     return(employees)
++ }
+> 
+> # Generate random employees
+> random_employees <- generateRandomEmployees()
+> 
+> # Define UI
+> ui <- fluidPage(
++     tags$head(
++         tags$style(
++             HTML('
++                 body {
++                     font-family: "Times New Roman", serif;
++                 }
++                 .navbar {
++                     background-color: maroon;
++                     border: 2px solid maroon;
++                 }
++                 .navbar-default .navbar-nav > li > a {
++                     color: black;
++                 }
++                 .tab-content {
++                     background-color: #f5f5f5;
++                     padding: 20px;
++                 }
++                 h2 {
++                     font-size: 24px;
++                 }
++             ')
++         )
++     ),
++     navbarPage("Fueling Hope and Innovation: Enhancing OU's Campus Food and Clothing Assistance Program",
++                tabPanel("Home",
++                         fluidRow(
++                             column(6, h1("OU Food Pantry", style = "font-size: 50px;")),
++                             column(6, h1("Research By Akshay Singh", style = "font-size: 24px; color: maroon;")),
++                             column(12, h2("Founder: Akshay Singh, akshay.singh.-1@ou.edu")),
++                             column(12, h2("Research Educator: Dr. Javeed Kittur")),
++                             column(12, h2("First Year Freshman Engineering Experience")),
++                             column(12, h2("Problem Statement")),
++                             column(12, p("The OU Food Pantry is a non-profit organization on campus that works to provide food and clothing to the staff, faculty, and students of OU. They help about 550 families each week. The items come from individual donations and can also be ordered from the Oklahoma food bank. They currently rely on volunteers to take orders, fill orders, organize the supplies, and note when items are running low."))
++                         ),
++                         fluidRow(
++                             column(12,
++                                    h2("Operating Hours"),
++                                    tableOutput("operating_hours_table")
++                             )
++                         )
++                ),
++                tabPanel("Inventory",
++                         fluidRow(
++                             sidebarLayout(
++                                 sidebarPanel(
++                                     textInput("item_name", "Item Name"),
++                                     numericInput("item_quantity", "Quantity", value = 1),
++                                     actionButton("add_item_btn", "Add Item"),
++                                     br(),
++                                     h4("Inventory Overview"),
++                                     tableOutput("inventory_table"),
++                                     br(),
++                                     h4("Inventory Summary"),
++                                     textOutput("inventory_summary")
++                                 ),
++                                 mainPanel(
++                                     h2("Inventory Visualizations"),
++                                     plotOutput("inventory_bar_chart"),
++                                     plotlyOutput("inventory_pie_chart")
++                                 )
++                             )
++                         )
++                ),
++                tabPanel("Donations",
++                         fluidRow(
++                             sidebarLayout(
++                                 sidebarPanel(
++                                     textInput("donation_category", "Donation Category"),
++                                     numericInput("donation_quantity", "Donation Quantity", value = 1),
++                                     actionButton("add_donation_btn", "Add Donation"),
++                                     br(),
++                                     h4("Donations Overview"),
++                                     tableOutput("donations_table"),
++                                     br(),
++                                     h4("Donations Summary"),
++                                     textOutput("donations_summary")
++                                 ),
++                                 mainPanel(
++                                     h2("Donations Visualizations"),
++                                     plotOutput("donations_bar_chart"),
++                                     plotlyOutput("donations_pie_chart")
++                                 )
++                             )
++                         )
++                ),
++                tabPanel("Loyal Employees",
++                         fluidRow(
++                             sidebarLayout(
++                                 sidebarPanel(
++                                     textInput("employee_first_name", "First Name"),
++                                     textInput("employee_last_name", "Last Name"),
++                                     selectInput("employee_major", "Major", choices = c("Engineering", "Biology", "Business", "Psychology", "Computer Science", "History", "Mathematics", "Nursing", "English", "Sociology")),
++                                     selectInput("employee_shift", "Shift", choices = c("7 am - 12 pm", "12 pm - 5 pm", "7 am - 3 pm", "8 am - 4 pm")),
++                                     actionButton("add_employee_btn", "Add Employee"),
++                                 ),
++                                 mainPanel(
++                                     h2("Loyal Employees"),
++                                     tableOutput("loyal_employees_table")
++                                 )
++                             )
++                         )
++                ),
++                tabPanel("Order Management",
++                         fluidRow(
++                             sidebarLayout(
++                                 sidebarPanel(
++                                     textInput("order_item_name", "Order Item Name"),
++                                     numericInput("order_quantity", "Order Quantity", value = 1),
++                                     actionButton("place_order_btn", "Place Order"),
++                                     br(),
++                                     h4("Fill Orders"),
++                                     textInput("fill_order_name", "Item Name"),
++                                     numericInput("fill_order_quantity", "Quantity", value = 1),
++                                     actionButton("fill_order_btn", "Fill Order"),
++                                     br(),
++                                     h4("Organize Supplies"),
++                                     textInput("supply_item_name", "Item Name"),
++                                     numericInput("supply_item_quantity", "Quantity", value = 1),
++                                     actionButton("organize_supplies_btn", "Organize Supplies"),
++                                     br(),
++                                     h4("Low Inventory Notifications"),
++                                     textOutput("low_inventory_notification")
++                                 ),
++                                 mainPanel(
++                                     h2("Current Orders"),
++                                     tableOutput("current_orders_table")
++                                 )
++                             )
++                         )
++                )
++     )
++ )
+> 
+> # Define server
+> server <- function(input, output, session) {
++     
++     # Display operating hours table
++     output$operating_hours_table <- renderTable({
++         operating_hours
++     })
++     
++     # Initialize inventory data frame, donations data frame, current orders, low inventory data frame, and supplies data frame
++     inventory_data <- reactiveVal(inventory)
++     donations_data <- reactiveVal(data.frame(DonationCategory = character(0), DonationQuantity = numeric(0)))
++     loyal_employees_data <- reactiveVal(random_employees)
++     current_orders_data <- reactiveVal(data.frame(OrderItemName = character(0), OrderQuantity = numeric(0)))
++     low_inventory_data <- reactiveVal(data.frame(ItemName = character(0), Quantity = numeric(0)))
++     supplies_data <- reactiveVal(data.frame(ItemName = character(0), Quantity = numeric(0)))
++     
++     # Function to add items to inventory
++     observeEvent(input$add_item_btn, {
++         item_name <- input$item_name
++         item_quantity <- input$item_quantity
++         
++         if (item_name != "" && item_quantity > 0) {
++             new_item <- data.frame(ItemName = item_name, Quantity = item_quantity)
++             inventory_data(rbind(inventory_data(), new_item))
++             updateTextInput(session, "item_name", value = "")
++             updateNumericInput(session, "item_quantity", value = 1)
++         }
++     })
++     
++     # Function to add donations to inventory
++     observeEvent(input$add_donation_btn, {
++         donation_category <- input$donation_category
++         donation_quantity <- input$donation_quantity
++         
++         if (donation_category != "" && donation_quantity > 0) {
++             new_donation <- data.frame(DonationCategory = donation_category, DonationQuantity = donation_quantity)
++             donations_data(rbind(donations_data(), new_donation))
++             updateTextInput(session, "donation_category", value = "")
++             updateNumericInput(session, "donation_quantity", value = 1)
++         }
++     })
++     
++     # Function to place orders
++     observeEvent(input$place_order_btn, {
++         order_item_name <- input$order_item_name
++         order_quantity <- input$order_quantity
++         
++         if (order_item_name != "" && order_quantity > 0) {
++             new_order <- data.frame(OrderItemName = order_item_name, OrderQuantity = order_quantity)
++             current_orders_data(rbind(current_orders_data(), new_order))
++             
++             # Update inventory (decrease quantity)
++             updated_inventory <- inventory_data()
++             item_index <- which(updated_inventory$ItemName == order_item_name)
++             if (length(item_index) > 0) {
++                 updated_inventory$Quantity[item_index] <- updated_inventory$Quantity[item_index] - order_quantity
++                 inventory_data(updated_inventory)
++             }
++             
++             updateTextInput(session, "order_item_name", value = "")
++             updateNumericInput(session, "order_quantity", value = 1)
++         }
++     })
++     
++     # Function to fill orders
++     observeEvent(input$fill_order_btn, {
++         fill_order_name <- input$fill_order_name
++         fill_order_quantity <- input$fill_order_quantity
++         
++         if (fill_order_name != "" && fill_order_quantity > 0) {
++             updated_inventory <- inventory_data()
++             item_index <- which(updated_inventory$ItemName == fill_order_name)
++             if (length(item_index) > 0) {
++                 updated_inventory$Quantity[item_index] <- updated_inventory$Quantity[item_index] + fill_order_quantity
++                 inventory_data(updated_inventory)
++             }
++             
++             updateTextInput(session, "fill_order_name", value = "")
++             updateNumericInput(session, "fill_order_quantity", value = 1)
++         }
++     })
++     
++     # Function to organize supplies
++     observeEvent(input$organize_supplies_btn, {
++         supply_item_name <- input$supply_item_name
++         supply_item_quantity <- input$supply_item_quantity
++         
++         if (supply_item_name != "" && supply_item_quantity > 0) {
++             new_supply_item <- data.frame(ItemName = supply_item_name, Quantity = supply_item_quantity)
++             supplies_data(rbind(supplies_data(), new_supply_item))
++             
++             updateTextInput(session, "supply_item_name", value = "")
++             updateNumericInput(session, "supply_item_quantity", value = 1)
++         }
++     })
++     
++     # Function to check and notify low inventory items
++     observe({
++         low_inventory_threshold <- 10  # You can adjust this threshold as needed
++         low_items <- inventory_data()[inventory_data()$Quantity < low_inventory_threshold, ]
++         low_inventory_data(low_items)
++     })
++     
++     # Display inventory table
++     output$inventory_table <- renderTable({
++         inventory_data()
++     })
++     
++     # Data visualization: Inventory bar chart
++     output$inventory_bar_chart <- renderPlot({
++         ggplot(inventory_data(), aes(x = reorder(ItemName, Quantity), y = Quantity)) +
++             geom_bar(stat = "identity", fill = "skyblue") +
++             labs(title = "Inventory Status", x = "Item Name", y = "Quantity") +
++             theme_minimal() +
++             coord_flip()
++     })
++     
++     # Data visualization: Inventory pie chart
++     output$inventory_pie_chart <- renderPlotly({
++         pie_data <- inventory_data()
++         plot_ly(pie_data, labels = ~ItemName, values = ~Quantity, type = "pie") %>%
++             layout(title = "Inventory Distribution")
++     })
++     
++     # Inventory summary
++     output$inventory_summary <- renderText({
++         summary_text <- paste("Total Items:", nrow(inventory_data()), "\n")
++         summary_text <- paste(summary_text, "Total Quantity:", sum(inventory_data()$Quantity))
++         return(summary_text)
++     })
++     
++     # Display donations table
++     output$donations_table <- renderTable({
++         donations_data()
++     })
++     
++     # Data visualization: Donations bar chart
++     output$donations_bar_chart <- renderPlot({
++         ggplot(donations_data(), aes(x = reorder(DonationCategory, DonationQuantity), y = DonationQuantity)) +
++             geom_bar(stat = "identity", fill = "orange") +
++             labs(title = "Donations Status", x = "Donation Category", y = "Quantity") +
++             theme_minimal() +
++             coord_flip()
++     })
++     
++     # Data visualization: Donations pie chart
++     output$donations_pie_chart <- renderPlotly({
++         pie_data <- donations_data()
++         plot_ly(pie_data, labels = ~DonationCategory, values = ~DonationQuantity, type = "pie") %>%
++             layout(title = "Donations Distribution")
++     })
++     
++     # Donations summary
++     output$donations_summary <- renderText({
++         summary_text <- paste("Total Donations:", nrow(donations_data()), "\n")
++         summary_text <- paste(summary_text, "Total Quantity Donated:", sum(donations_data()$DonationQuantity))
++         return(summary_text)
++     })
++     
++     # Display loyal employees table
++     output$loyal_employees_table <- renderTable({
++         loyal_employees_data()
++     })
++     
++     # Display current orders table
++     output$current_orders_table <- renderTable({
++         current_orders_data()
++     })
++     
++     # Display low inventory items
++     output$low_inventory_notification <- renderText({
++         low_inventory <- low_inventory_data()
++         if (nrow(low_inventory) > 0) {
++             low_items <- paste(low_inventory$ItemName, " (Quantity: ", low_inventory$Quantity, ")\n")
++             
++             low_items <- paste(low_items, collapse = ", ")
++             low_items <- substr(low_items, 1, 1000)  # Truncate if too long
++         } else {
++             low_items <- "No low inventory items"
++         }
++         low_items
++     })
++     
++ }
+> 
+> # Run the Shiny app
+> shinyApp(ui, server)
+
+Listening on http://127.0.0.1:3484
+
+> shinyApp(ui, server)
+
+Listening on http://127.0.0.1:3484
+
+> # Modify the "tabPanel" for the "Home" section as follows:
+> tabPanel("Home",
++          fluidRow(
++              column(6, h1("OU Food Pantry", style = "font-size: 50px; color: maroon;")),
++              column(6, h1("University of Oklahoma", style = "font-size: 50px; color: maroon;")),
++              column(12, h2("Founder: Akshay Singh, akshay.singh.-1@ou.edu")),
++              column(12, h2("Research Educator: Dr. Javeed Kittur")),
++              column(12, h2("First Year Freshman Engineering Experience")),
++              column(12, h3("Problem Statement", style = "font-size: 24px; color: maroon;")),
++              column(12, p("The OU Food Pantry is a non-profit organization on campus that works to provide food and clothing to the staff, faculty, and students of OU. They help about 550 families each week. The items come from individual donations and can also be ordered from the Oklahoma food bank. They currently rely on volunteers to take orders, fill orders, organize the supplies, and note when items are running low.", style = "font-size: 18px;")),
++              column(12, h2("Operating Hours")),
++              column(12, tableOutput("operating_hours_table"))
++          )
++ )
+<div class="tab-pane" title="Home" data-value="Home">
+  <div class="row">
+    <div class="col-sm-6">
+      <h1 style="font-size: 50px; color: maroon;">OU Food Pantry</h1>
+    </div>
+    <div class="col-sm-6">
+      <h1 style="font-size: 50px; color: maroon;">University of Oklahoma</h1>
+    </div>
+    <div class="col-sm-12">
+      <h2>Founder: Akshay Singh, akshay.singh.-1@ou.edu</h2>
+    </div>
+    <div class="col-sm-12">
+      <h2>Research Educator: Dr. Javeed Kittur</h2>
+    </div>
+    <div class="col-sm-12">
+      <h2>First Year Freshman Engineering Experience</h2>
+    </div>
+    <div class="col-sm-12">
+      <h3 style="font-size: 24px; color: maroon;">Problem Statement</h3>
+    </div>
+    <div class="col-sm-12">
+      <p style="font-size: 18px;">The OU Food Pantry is a non-profit organization on campus that works to provide food and clothing to the staff, faculty, and students of OU. They help about 550 families each week. The items come from individual donations and can also be ordered from the Oklahoma food bank. They currently rely on volunteers to take orders, fill orders, organize the supplies, and note when items are running low.</p>
+    </div>
+    <div class="col-sm-12">
+      <h2>Operating Hours</h2>
+    </div>
+    <div class="col-sm-12">
+      <div id="operating_hours_table" class="shiny-html-output"></div>
+    </div>
+  </div>
+</div>
+> 
+> shinyApp(ui, server)
+
+Listening on http://127.0.0.1:3484
+
+> library(shiny)
+> library(ggplot2)
+> library(plotly)
+> 
+> # Sample inventory data with more items
+> inventory <- data.frame(
++     ItemName = c("Rice", "Beans", "Canned Soup", "Pasta", "Cereal", "Flour", "Sugar", "Canned Vegetables", "Peanut Butter", "Spaghetti Sauce"),
++     Quantity = c(100, 50, 75, 120, 80, 40, 60, 70, 30, 50)
++ )
+> 
+> # Define a function to generate random employees
+> generateRandomEmployees <- function() {
++     set.seed(123)
++     first_names <- sample(c("John", "Jane", "Steve", "Emily", "Michael", "Olivia", "David", "Sophia", "Daniel", "Ava"), 100, replace = TRUE)
++     last_names <- sample(c("Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Garcia", "Martinez", "Jackson", "Anderson"), 100, replace = TRUE)
++     majors <- sample(c("Engineering", "Biology", "Business", "Psychology", "Computer Science", "History", "Mathematics", "Nursing", "English", "Sociology"), 100, replace = TRUE)
++     shift <- sample(c("7 am - 12 pm", "12 pm - 5 pm", "7 am - 3 pm", "8 am - 4 pm"), 100, replace = TRUE)
++     employees <- data.frame(FirstName = first_names, LastName = last_names, Major = majors, Shift = shift)
++     employees <- unique(employees)  # Remove duplicates
++     return(employees)
++ }
+> 
+> # Generate random employees
+> random_employees <- generateRandomEmployees()
+> 
+> # Define UI
+> ui <- fluidPage(
++     tags$head(
++         tags$style(
++             HTML('
++                 body {
++                     font-family: "Times New Roman", serif;
++                 }
++                 .navbar {
++                     background-color: maroon;
++                     border: 2px solid maroon;
++                 }
++                 .navbar-default .navbar-nav > li > a {
++                     color: black;
++                 }
++                 .tab-content {
++                     background-color: #f5f5f5;
++                     padding: 20px;
++                 }
++                 h2 {
++                     font-size: 24px;
++                 }
++                 h1, h2 {
++                     font-size: 50px;
++                     color: maroon;
++                 }
++             ')
++         )
++     ),
++     navbarPage("Fueling Hope and Innovation: Enhancing OU's Campus Food and Clothing Assistance Program",
++                tabPanel("Home",
++                         fluidRow(
++                             column(12, h1("OU Food Pantry")),
++                             column(12, h2("University of Oklahoma")),
++                             column(12, h2("Founder: Akshay Singh, akshay.singh.-1@ou.edu")),
++                             column(12, h2("Research Educator: Dr. Javeed Kittur")),
++                             column(12, h2("First Year Freshman Engineering Experience")),
++                             column(12, h3("Problem Statement")),  # Increased font size
++                             column(12, p("The OU Food Pantry is a non-profit organization on campus that works to provide food and clothing to the staff, faculty, and students of OU. They help about 550 families each week. The items come from individual donations and can also be ordered from the Oklahoma food bank. They currently rely on volunteers to take orders, fill orders, organize the supplies, and note when items are running low."))
++                         ),
++                         fluidRow(
++                             column(12,
++                                    h2("Operating Hours"),
++                                    tableOutput("operating_hours_table")
++                             )
++                         )
++                ),
++                tabPanel("Inventory",
++                         fluidRow(
++                             sidebarLayout(
++                                 sidebarPanel(
++                                     textInput("item_name", "Item Name"),
++                                     numericInput("item_quantity", "Quantity", value = 1),
++                                     actionButton("add_item_btn", "Add Item"),
++                                     br(),
++                                     h4("Inventory Overview"),
++                                     tableOutput("inventory_table"),
++                                     br(),
++                                     h4("Inventory Summary"),
++                                     textOutput("inventory_summary")
++                                 ),
++                                 mainPanel(
++                                     h2("Inventory Visualizations"),
++                                     plotOutput("inventory_bar_chart"),
++                                     plotlyOutput("inventory_pie_chart")
++                                 )
++                             )
++                         )
++                ),
++                tabPanel("Donations",
++                         fluidRow(
++                             sidebarLayout(
++                                 sidebarPanel(
++                                     textInput("donation_category", "Donation Category"),
++                                     numericInput("donation_quantity", "Donation Quantity", value = 1),
++                                     actionButton("add_donation_btn", "Add Donation"),
++                                     br(),
++                                     h4("Donations Overview"),
++                                     tableOutput("donations_table"),
++                                     br(),
++                                     h4("Donations Summary"),
++                                     textOutput("donations_summary")
++                                 ),
++                                 mainPanel(
++                                     h2("Donations Visualizations"),
++                                     plotOutput("donations_bar_chart"),
++                                     plotlyOutput("donations_pie_chart")
++                                 )
++                             )
++                         )
++                ),
++                tabPanel("Loyal Employees",
++                         fluidRow(
++                             sidebarLayout(
++                                 sidebarPanel(
++                                     textInput("employee_first_name", "First Name"),
++                                     textInput("employee_last_name", "Last Name"),
++                                     selectInput("employee_major", "Major", choices = c("Engineering", "Biology", "Business", "Psychology", "Computer Science", "History", "Mathematics", "Nursing", "English", "Sociology")),
++                                     selectInput("employee_shift", "Shift", choices = c("7 am - 12 pm", "12 pm - 5 pm", "7 am - 3 pm", "8 am - 4 pm")),
++                                     actionButton("add_employee_btn", "Add Employee"),
++                                 ),
++                                 mainPanel(
++                                     h2("Loyal Employees"),
++                                     tableOutput("loyal_employees_table")
++                                 )
++                             )
++                         )
++                ),
++                tabPanel("Order Management",
++                         fluidRow(
++                             sidebarLayout(
++                                 sidebarPanel(
++                                     textInput("order_item_name", "Order Item Name"),
++                                     numericInput("order_quantity", "Order Quantity", value = 1),
++                                     actionButton("place_order_btn", "Place Order"),
++                                     br(),
++                                     h4("Fill Orders"),
++                                     textInput("fill_order_name", "Item Name"),
++                                     numericInput("fill_order_quantity", "Quantity", value = 1),
++                                     actionButton("fill_order_btn", "Fill Order"),
++                                     br(),
++                                     h4("Organize Supplies"),
++                                     textInput("supply_item_name", "Item Name"),
++                                     numericInput("supply_item_quantity", "Quantity", value = 1),
++                                     actionButton("organize_supplies_btn", "Organize Supplies"),
++                                     br(),
++                                     h4("Low Inventory Notifications"),
++                                     textOutput("low_inventory_notification")
++                                 ),
++                                 mainPanel(
++                                     h2("Current Orders"),
++                                     tableOutput("current_orders_table")
++                                 )
++                             )
++                         )
++                )
++     )
++ )
+> 
+> # Define server
+> server <- function(input, output, session) {
++     
++     # Display operating hours table
++     output$operating_hours_table <- renderTable({
++         operating_hours
++     })
++     
++     # Initialize inventory data frame, donations data frame, current orders, low inventory data frame, and supplies data frame
++     inventory_data <- reactiveVal(inventory)
++     donations_data <- reactiveVal(data.frame(DonationCategory = character(0), DonationQuantity = numeric(0)))
++     loyal_employees_data <- reactiveVal(random_employees)
++     current_orders_data <- reactiveVal(data.frame(OrderItemName = character(0), OrderQuantity = numeric(0)))
++     low_inventory_data <- reactiveVal(data.frame(ItemName = character(0), Quantity = numeric(0)))
++     supplies_data <- reactiveVal(data.frame(ItemName = character(0), Quantity = numeric(0)))
++     
++     # Function to add items to inventory
++     observeEvent(input$add_item_btn, {
++         item_name <- input$item_name
++         item_quantity <- input$item_quantity
++         
++         if (item_name != "" && item_quantity > 0) {
++             new_item <- data.frame(ItemName = item_name, Quantity = item_quantity)
++             inventory_data(rbind(inventory_data(), new_item))
++             updateTextInput(session, "item_name", value = "")
++             updateNumericInput(session, "item_quantity", value = 1)
++         }
++     })
++     
++     # Function to add donations to inventory
++     observeEvent(input$add_donation_btn, {
++         donation_category <- input$donation_category
++         donation_quantity <- input$donation_quantity
++         
++         if (donation_category != "" && donation_quantity > 0) {
++             new_donation <- data.frame(DonationCategory = donation_category, DonationQuantity = donation_quantity)
++             donations_data(rbind(donations_data(), new_donation))
++             updateTextInput(session, "donation_category", value = "")
++             updateNumericInput(session, "donation_quantity", value = 1)
++         }
++     })
++     
++     # Function to place orders
++     observeEvent(input$place_order_btn, {
++         order_item_name <- input$order_item_name
++         order_quantity <- input$order_quantity
++         
++         if (order_item_name != "" && order_quantity > 0) {
++             new_order <- data.frame(OrderItemName = order_item_name, OrderQuantity = order_quantity)
++             current_orders_data(rbind(current_orders_data(), new_order))
++             
++             # Update inventory (decrease quantity)
++             updated_inventory <- inventory_data()
++             item_index <- which(updated_inventory$ItemName == order_item_name)
++             if (length(item_index) > 0) {
++                 updated_inventory$Quantity[item_index] <- updated_inventory$Quantity[item_index] - order_quantity
++                 inventory_data(updated_inventory)
++             }
++             
++             updateTextInput(session, "order_item_name", value = "")
++             updateNumericInput(session, "order_quantity", value = 1)
++         }
++     })
++     
++     # Function to fill orders
++     observeEvent(input$fill_order_btn, {
++         fill_order_name <- input$fill_order_name
++         fill_order_quantity <- input$fill_order_quantity
++         
++         if (fill_order_name != "" && fill_order_quantity > 0) {
++             updated_inventory <- inventory_data()
++             item_index <- which(updated_inventory$ItemName == fill_order_name)
++             if (length(item_index) > 0) {
++                 updated_inventory$Quantity[item_index] <- updated_inventory$Quantity[item_index] + fill_order_quantity
++                 inventory_data(updated_inventory)
++             }
++             
++             updateTextInput(session, "fill_order_name", value = "")
++             updateNumericInput(session, "fill_order_quantity", value = 1)
++         }
++     })
++     
++     # Function to organize supplies
++     observeEvent(input$organize_supplies_btn, {
++         supply_item_name <- input$supply_item_name
++         supply_item_quantity <- input$supply_item_quantity
++         
++         if (supply_item_name != "" && supply_item_quantity > 0) {
++             new_supply_item <- data.frame(ItemName = supply_item_name, Quantity = supply_item_quantity)
++             supplies_data(rbind(supplies_data(), new_supply_item))
++             
++             updateTextInput(session, "supply_item_name", value = "")
++             updateNumericInput(session, "supply_item_quantity", value = 1)
++         }
++     })
++     
++     # Function to check and notify low inventory items
++     observe({
++         low_inventory_threshold <- 10  # You can adjust this threshold as needed
++         low_items <- inventory_data()[inventory_data()$Quantity < low_inventory_threshold, ]
++         low_inventory_data(low_items)
++     })
++     
++     # Display inventory table
++     output$inventory_table <- renderTable({
++         inventory_data()
++     })
++     
++     # Data visualization: Inventory bar chart
++     output$inventory_bar_chart <- renderPlot({
++         ggplot(inventory_data(), aes(x = reorder(ItemName, Quantity), y = Quantity)) +
++             geom_bar(stat = "identity", fill = "skyblue") +
++             labs(title = "Inventory Status", x = "Item Name", y = "Quantity") +
++             theme_minimal() +
++             coord_flip()
++     })
++     
++     # Data visualization: Inventory pie chart
++     output$inventory_pie_chart <- renderPlotly({
++         pie_data <- inventory_data()
++         plot_ly(pie_data, labels = ~ItemName, values = ~Quantity, type = "pie") %>%
++             layout(title = "Inventory Distribution")
++     })
++     
++     # Inventory summary
++     output$inventory_summary <- renderText({
++         summary_text <- paste("Total Items:", nrow(inventory_data()), "\n")
++         summary_text <- paste(summary_text, "Total Quantity:", sum(inventory_data()$Quantity))
++         return(summary_text)
++     })
++     
++     # Display donations table
++     output$donations_table <- renderTable({
++         donations_data()
++     })
++     
++     # Data visualization: Donations bar chart
++     output$donations_bar_chart <- renderPlot({
++         ggplot(donations_data(), aes(x = reorder(DonationCategory, DonationQuantity), y = DonationQuantity)) +
++             geom_bar(stat = "identity", fill = "orange") +
++             labs(title = "Donations Status", x = "Donation Category", y = "Quantity") +
++             theme_minimal() +
++             coord_flip()
++     })
++     
++     # Data visualization: Donations pie chart
++     output$donations_pie_chart <- renderPlotly({
++         pie_data <- donations_data()
++         plot_ly(pie_data, labels = ~DonationCategory, values = ~DonationQuantity, type = "pie") %>%
++             layout(title = "Donations Distribution")
++     })
++     
++     # Donations summary
++     output$donations_summary <- renderText({
++         summary_text <- paste("Total Donations:", nrow(donations_data()), "\n")
++         summary_text <- paste(summary_text, "Total Quantity Donated:", sum(donations_data()$DonationQuantity))
++         return(summary_text)
++     })
++     
++     # Display loyal employees table
++     output$loyal_employees_table <- renderTable({
++         loyal_employees_data()
++     })
++     
++     # Display current orders table
++     output$current_orders_table <- renderTable({
++         current_orders_data()
++     })
++     
++     # Display low inventory items
++     output$low_inventory_notification <- renderText({
++         low_inventory <- low_inventory_data()
++         if (nrow(low_inventory) > 0) {
++             low_items <- paste(low_inventory$ItemName, " (Quantity: ", low_inventory$Quantity, ")\n")
++             
++             low_items <- paste(low_items, collapse = ", ")
++             low_items <- substr(low_items, 1, 1000)  # Truncate if too long
++         } else {
++             low_items <- "No low inventory items"
++         }
++         low_items
++     })
++     
++ }
+> 
+> # Run the Shiny app
+> shinyApp(ui, server)
